@@ -3,11 +3,10 @@
 //
 
 #include "planner/tracking_differ.h"
-#include "bsp/def.h"
 
+#include <cassert>
 #include <cmath>
-#include <math/math_macro.h>
-#include <arm_math.h>
+#include <numbers>
 
 using namespace planner;
 
@@ -19,8 +18,8 @@ using namespace planner;
 tracking_differ::tracking_differ(float omega, float zeta, float frc)
     : omega_(omega),
       zeta_(zeta),
-      delta_time_(frc > 0.0f ? 1.0f / frc : 0.0f) {
-    BSP_ASSERT(std::isfinite(omega) && std::isfinite(zeta) && std::isfinite(frc) &&
+      delta_time_(1.0f / frc) {
+    assert(std::isfinite(omega) && std::isfinite(zeta) && std::isfinite(frc) &&
         omega >= 0 && zeta >= 0 && frc > 0);
 }
 
@@ -37,10 +36,6 @@ void tracking_differ::clear() {
  * @param target 重置后的目标值
  */
 void tracking_differ::clear(float target) {
-    if (!std::isfinite(target)) {
-        clear();
-        return;
-    }
     target_ = target;
     track_ = {target, 0.0f};
 }
@@ -52,11 +47,9 @@ void tracking_differ::clear(float target) {
  * @param frc 更新频率，单位 Hz
  */
 void tracking_differ::set_para(float omega, float zeta, float frc) {
-    if (!std::isfinite(omega) || !std::isfinite(zeta) || !std::isfinite(frc) ||
-        omega < 0 || zeta < 0 || frc <= 0) return;
     omega_ = omega;
     zeta_ = zeta;
-    delta_time_ = frc > 0.0f ? 1.0f / frc : 0.0f;
+    delta_time_ = 1.0f / frc;
 }
 
 /**
@@ -65,7 +58,6 @@ void tracking_differ::set_para(float omega, float zeta, float frc) {
  * @return first 为平滑后的目标值，second 为目标值的一阶导数
  */
 std::array <float, 2> tracking_differ::update(float target) {
-    if (!std::isfinite(target)) return track_;
     target_ = target;
 
     // 二阶跟踪系统：
@@ -90,15 +82,13 @@ std::array <float, 2> tracking_differ::update(float target) {
  * @note 目前仅支持关于 0 对称的 [-PI, PI] 角度区间
  */
 std::array <float, 2> tracking_differ::update_limit(float target) {
-    if (!std::isfinite(target)) {
-        return {wrap_pi(track_[0]), track_[1]};
-    }
     // 计算当前输入角度和上一次展开角度之间的最短角度差
-    float delta = std::fmod(target - target_, 2.0f * PI);
+    constexpr float pi = std::numbers::pi_v<float>;
+    float delta = std::fmod(target - target_, 2.0f * pi);
 
     // 如果角度差超过 PI，说明跨过了跳变边界，需要选择另一侧的最短路径
-    if (std::fabs(delta) > PI) {
-        delta -= (delta > 0.0f ? 1.0f : -1.0f) * 2.0f * PI;
+    if (std::fabs(delta) > pi) {
+        delta -= (delta > 0.0f ? 1.0f : -1.0f) * 2.0f * pi;
     }
 
     // 将输入角度展开成连续角度，避免 PI 和 -PI 附近的突变
@@ -129,11 +119,12 @@ std::array <float, 2> tracking_differ::update_mod(float target) {
  * @return 归一化后的角度
  */
 float tracking_differ::wrap_pi(float x) {
-    x = std::fmod(x + PI, 2.0f * PI);
+    constexpr float pi = std::numbers::pi_v<float>;
+    x = std::fmod(x + pi, 2.0f * pi);
 
     if (x < 0.0f) {
-        x += 2.0f * PI;
+        x += 2.0f * pi;
     }
 
-    return x - PI;
+    return x - pi;
 }

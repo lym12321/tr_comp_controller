@@ -12,7 +12,6 @@
 #define TRACKING_DIFFER_H
 
 #include <array>
-#include <arm_math_types.h>
 
 namespace planner {
 
@@ -47,6 +46,7 @@ namespace planner {
 
         /**
          * @brief 设置跟踪微分器参数
+         * @pre 参数有限，omega、zeta 非负，frc 为正
          * @param omega 自然频率
          * @param zeta 阻尼比
          * @param frc 更新频率，单位 Hz

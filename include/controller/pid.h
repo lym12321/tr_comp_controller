@@ -7,9 +7,8 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
-
-#include "bsp/def.h"
 
 namespace controller {
     class pid {
@@ -19,11 +18,11 @@ namespace controller {
         ~pid() = default;
 
         void clear() {
-            err = lst_err = p_out = i_out = d_out = out = 0;
+            err = i_out = 0;
         }
 
         void init(const pid_para_t &para) {
-            BSP_ASSERT(std::isfinite(para.kp) && std::isfinite(para.ki) && std::isfinite(para.kd) &&
+            assert(std::isfinite(para.kp) && std::isfinite(para.ki) && std::isfinite(para.kd) &&
                 std::isfinite(para.int_limit) && std::isfinite(para.out_limit) &&
                 para.int_limit >= 0 && para.out_limit >= 0);
             para_ = para;
@@ -57,14 +56,14 @@ namespace controller {
                 clear();
                 return 0.0f;
             }
-            lst_err = err, err = target - current;
-            p_out = para_.kp * err;
+            const float lst_err = err;
+            err = target - current;
+            const float p_out = para_.kp * err;
             i_out += para_.ki * err * dt;
-            d_out = para_.kd * (err - lst_err) / dt;
+            const float d_out = para_.kd * (err - lst_err) / dt;
             i_out = std::clamp(i_out, -para_.int_limit, para_.int_limit);
-            out = p_out + i_out + d_out;
-            out = std::clamp(out, -para_.out_limit, para_.out_limit);
-            return out;
+            const float out = p_out + i_out + d_out;
+            return std::clamp(out, -para_.out_limit, para_.out_limit);
         }
 
         float operator()(const float &current, const float &target) {
@@ -73,6 +72,6 @@ namespace controller {
 
     private:
         pid_para_t para_ = {};
-        float err = 0, lst_err = 0, p_out = 0, i_out = 0, d_out = 0, out = 0;
+        float err = 0, i_out = 0;
     };
 }

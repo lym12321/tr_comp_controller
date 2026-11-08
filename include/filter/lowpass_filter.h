@@ -10,11 +10,11 @@ namespace filter {
 		low_pass_filter() = default;
 		low_pass_filter(float cut_frequency, float sampling_frequency);
 		void clear();
+		// Frequencies must be finite and positive (Hz).
 		void set_params(float cut_frequency, float sampling_frequency);
 		float update(float sample);
 	private:
-		float cut_frequency_ = 0, sampling_frequency_ = 0;
-		float last_out_ = 0, current_out_ = 0;
+		float current_out_ = 0;
 		float filter_coe_ = 0;
 	};
 };

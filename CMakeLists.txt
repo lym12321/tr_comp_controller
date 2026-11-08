@@ -11,7 +11,7 @@ target_include_directories(controller PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
-target_link_libraries(controller PUBLIC bsp m components::math)
+target_link_libraries(controller PUBLIC m)
 
 set_target_properties(controller PROPERTIES
         C_STANDARD 17
