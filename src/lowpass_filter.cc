@@ -26,7 +26,15 @@ void low_pass_filter::clear() {
 }
 
 void low_pass_filter::set_params(float cut_frequency, float sampling_frequency) {
-	filter_coe_ = 1 / (1 + sampling_frequency / (2 * std::numbers::pi_v<float> * cut_frequency));
+	if (!std::isfinite(cut_frequency) || !std::isfinite(sampling_frequency) ||
+		cut_frequency <= 0 || sampling_frequency <= 0) {
+		return;
+	}
+	const float coefficient = 1 / (1 + sampling_frequency /
+		(2 * std::numbers::pi_v<float> * cut_frequency));
+	if (std::isfinite(coefficient) && coefficient > 0 && coefficient <= 1) {
+		filter_coe_ = coefficient;
+	}
 }
 
 float low_pass_filter::update(float sample) {

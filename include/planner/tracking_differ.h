@@ -46,7 +46,7 @@ namespace planner {
 
         /**
          * @brief 设置跟踪微分器参数
-         * @pre 参数有限，omega、zeta 非负，frc 为正
+         * @note 参数非有限、omega 或 zeta 为负、frc 非正时保留原参数
          * @param omega 自然频率
          * @param zeta 阻尼比
          * @param frc 更新频率，单位 Hz

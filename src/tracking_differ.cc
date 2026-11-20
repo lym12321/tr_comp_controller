@@ -18,7 +18,7 @@ using namespace planner;
 tracking_differ::tracking_differ(float omega, float zeta, float frc)
     : omega_(omega),
       zeta_(zeta),
-      delta_time_(1.0f / frc) {
+      delta_time_(frc > 0.0f ? 1.0f / frc : 0.0f) {
     assert(std::isfinite(omega) && std::isfinite(zeta) && std::isfinite(frc) &&
         omega >= 0 && zeta >= 0 && frc > 0);
 }
@@ -36,6 +36,10 @@ void tracking_differ::clear() {
  * @param target 重置后的目标值
  */
 void tracking_differ::clear(float target) {
+    if (!std::isfinite(target)) {
+        clear();
+        return;
+    }
     target_ = target;
     track_ = {target, 0.0f};
 }
@@ -47,6 +51,8 @@ void tracking_differ::clear(float target) {
  * @param frc 更新频率，单位 Hz
  */
 void tracking_differ::set_para(float omega, float zeta, float frc) {
+    if (!std::isfinite(omega) || !std::isfinite(zeta) || !std::isfinite(frc) ||
+        omega < 0 || zeta < 0 || frc <= 0) return;
     omega_ = omega;
     zeta_ = zeta;
     delta_time_ = 1.0f / frc;
@@ -58,6 +64,7 @@ void tracking_differ::set_para(float omega, float zeta, float frc) {
  * @return first 为平滑后的目标值，second 为目标值的一阶导数
  */
 std::array <float, 2> tracking_differ::update(float target) {
+    if (!std::isfinite(target)) return track_;
     target_ = target;
 
     // 二阶跟踪系统：
@@ -82,6 +89,7 @@ std::array <float, 2> tracking_differ::update(float target) {
  * @note 目前仅支持关于 0 对称的 [-PI, PI] 角度区间
  */
 std::array <float, 2> tracking_differ::update_limit(float target) {
+    if (!std::isfinite(target)) return {wrap_pi(track_[0]), track_[1]};
     // 计算当前输入角度和上一次展开角度之间的最短角度差
     constexpr float pi = std::numbers::pi_v<float>;
     float delta = std::fmod(target - target_, 2.0f * pi);

@@ -10,7 +10,7 @@ namespace filter {
 		low_pass_filter() = default;
 		low_pass_filter(float cut_frequency, float sampling_frequency);
 		void clear();
-		// Frequencies must be finite and positive (Hz).
+		// Invalid runtime values leave the current coefficient unchanged.
 		void set_params(float cut_frequency, float sampling_frequency);
 		float update(float sample);
 	private:

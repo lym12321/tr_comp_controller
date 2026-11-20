@@ -2,6 +2,9 @@
 #include "filter/bandpass_filter.h"
 #include "filter/bandstop_filter.h"
 #include "filter/window_filter.h"
+#include "filter/lowpass_filter.h"
+#include "planner/tracking_differ.h"
+#include "controller/pid.h"
 #include <cassert>
 #include <cmath>
 #include <complex>
@@ -85,6 +88,46 @@ void check_parameters() {
     assert(probe.set_coefficients(2, 0, 0, 1, 0, 0, {}));
     assert(std::isnan(probe.update(std::numeric_limits<float>::max())));
     assert(probe.update(1) == 2);
+}
+
+void check_lowpass() {
+    filter::low_pass_filter low(50, 1000);
+    const float first = low.update(1);
+    assert(first > 0 && first < 1);
+    auto reference = low;
+    for (const float invalid : {invalid_nan, inf, -1.0f, 0.0f}) {
+        low.set_params(invalid, 1000);
+        low.set_params(50, invalid);
+    }
+    assert(low.update(0) == reference.update(0));
+}
+
+void check_tracking_differ() {
+    planner::tracking_differ track(10, 1, 100);
+    const auto previous = track.update(2);
+    auto reference = track;
+    track.set_para(20, 1, 0);
+    track.set_para(invalid_nan, 1, 100);
+    track.set_para(10, -1, 100);
+    assert(track.update(invalid_nan) == previous);
+    assert(track.update(3) == reference.update(3));
+
+    track.clear(4);
+    const auto angle = track.update_limit(-2);
+    reference = track;
+    assert(track.update_limit(inf) == angle);
+    assert(track.update_limit(-1) == reference.update_limit(-1));
+    track.clear(invalid_nan);
+    reference.clear();
+    assert(track.update_limit(1) == reference.update_limit(1));
+}
+
+void check_pid() {
+    controller::pid pid(1, 2, 3, 100, 100);
+    assert(pid.update(1, 3, 0.5f) == 16);
+    assert(pid.update(1, 4, 0.5f) == 14);
+    assert(pid.update(1, invalid_nan) == 0);
+    assert(pid.update(1, 3, 0.5f) == 16);
 }
 
 void check_windows() {
@@ -223,6 +266,9 @@ void check_response_sweep() {
 
 
 int main() {
+    check_lowpass();
+    check_tracking_differ();
+    check_pid();
     check_response_rejection();
     check_response_sweep();
     check_parameters();

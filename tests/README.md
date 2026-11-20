@@ -3,13 +3,13 @@
 在 controller 仓库根目录使用支持 C++23 的宿主机编译器运行：
 
 ```sh
-g++ -std=c++23 -O2 -Wall -Wextra -Werror -Iinclude tests/filter_test.cc src/biquad_filter.cc src/highpass_filter.cc src/bandpass_filter.cc src/bandstop_filter.cc -o filter_test
+g++ -std=c++23 -O2 -Wall -Wextra -Werror -Iinclude tests/filter_test.cc src/biquad_filter.cc src/highpass_filter.cc src/bandpass_filter.cc src/bandstop_filter.cc src/lowpass_filter.cc src/tracking_differ.cc -o filter_test
 ./filter_test
 ```
 
 Windows 可将输出文件指定为 `filter_test.exe`，再运行 `./filter_test.exe`。测试不依赖 BSP、RTOS 或 ARM 工具链，不要定义 `NDEBUG`。
 
-覆盖非法参数、NaN/Inf、IIR 溢出后的状态保留、清空和重新配置、窗口启动和环绕、正常参数的冲激响应与 -3 dB 边界，以及低截止频率、窄带和接近 Nyquist 的配置。
+覆盖低通与跟踪微分器拒绝非法参数后的状态、PID 积分和微分的时间步长，以及 IIR 溢出、清空和重新配置、窗口启动和环绕、正常参数的冲激响应与 -3 dB 边界、低截止频率、窄带和接近 Nyquist 的配置。
 
 第二轮 PR 的三个失真案例必须返回配置失败，并保持原系数和历史：
 
