@@ -94,6 +94,7 @@ void check_lowpass() {
     filter::low_pass_filter low(50, 1000);
     const float first = low.update(1);
     assert(first > 0 && first < 1);
+    check_samples(low);
     auto reference = low;
     for (const float invalid : {invalid_nan, inf, -1.0f, 0.0f}) {
         low.set_params(invalid, 1000);

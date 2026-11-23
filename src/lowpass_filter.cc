@@ -6,13 +6,14 @@
 
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <numbers>
 
 using namespace filter;
 
 /**
  * @brief 低通滤波器
- * @param cut_frequency 截止频率（-3dB增益点）
+ * @param cut_frequency 模拟 RC 截止频率 (Hz)，经后向欧拉离散化
  * @param sampling_frequency 采样频率
  */
 low_pass_filter::low_pass_filter(float cut_frequency, float sampling_frequency) {
@@ -38,6 +39,7 @@ void low_pass_filter::set_params(float cut_frequency, float sampling_frequency) 
 }
 
 float low_pass_filter::update(float sample) {
+	if (!std::isfinite(sample)) return std::numeric_limits<float>::quiet_NaN();
 	current_out_ = (1-filter_coe_)*current_out_ + filter_coe_*sample;
 	return current_out_;
 }
